@@ -1,0 +1,6 @@
+[versions]
+botella="0.1-DEVEL"
+
+[libraries]
+# Kotlin and data types/structures related dependencies
+botellaCommon = { module = "com.ai4traders:Botella-Common", version.ref = "botella"}

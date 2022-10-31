@@ -1,0 +1,56 @@
+<configuration>
+    <shutdownHook class="ch.qos.logback.core.hook.DelayingShutdownHook" />
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <shortenedLoggerNameLength>40</shortenedLoggerNameLength>
+            <includeContext>false</includeContext>
+            <includeCallerData>true</includeCallerData>
+            <fieldNames>
+                <timestamp>timestamp</timestamp>
+                <message>message</message>
+                <thread>[ignore]</thread>
+                <version>[ignore]</version>
+                <levelValue>[ignore]</levelValue>
+                <caller>trace</caller>
+                <stackTrace>exception</stackTrace>
+                <mdc>context</mdc>
+            </fieldNames>
+        </encoder>
+    </appender>
+    <appender name="ROLLING" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>./logs/%d{yyyy-MM-dd,aux}/botella-api-kraken-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>50MB</maxFileSize>
+            <maxHistory>7</maxHistory>
+            <totalSizeCap>5GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} %-5level [%thread] %logger{20} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <appender name="ASYNC-ROLLING" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>1000</queueSize>
+        <discardingThreshold>20</discardingThreshold>
+        <maxFlushTime>10000</maxFlushTime>
+        <neverBlock>true</neverBlock>
+        <appender-ref ref="ROLLING" />
+    </appender>
+    <appender name="ASYNC-STDOUT" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>1000</queueSize>
+        <discardingThreshold>20</discardingThreshold>
+        <maxFlushTime>10000</maxFlushTime>
+        <neverBlock>true</neverBlock>
+        <appender-ref ref="STDOUT" />
+    </appender>
+    <logger name="botella" level="DEBUG" />
+    <root level="info">
+        <appender-ref ref="ASYNC-ROLLING" />
+        <appender-ref ref="ASYNC-STDOUT" />
+    </root>
+</configuration>
