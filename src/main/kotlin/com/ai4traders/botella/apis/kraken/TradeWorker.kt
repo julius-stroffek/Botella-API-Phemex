@@ -23,30 +23,36 @@ class TradeWorker() {
 
     var tradeProducerBTCUSD = MarketTradeProducer(TradableProduct.BTCUSD, MarketCode.KRAKEN)
     var statsProducerBTCUSD = TradeStatisticsProducer(TradableProduct.BTCUSD, MarketCode.KRAKEN)
+    var orderStatsProducerBTCUSD = OrderStatisticsProducer(TradableProduct.BTCUSD, MarketCode.KRAKEN)
 
     var tradeProducerETHUSD = MarketTradeProducer(TradableProduct.ETHUSD, MarketCode.KRAKEN)
     var statsProducerETHUSD = TradeStatisticsProducer(TradableProduct.ETHUSD, MarketCode.KRAKEN)
+    var orderStatsProducerETHUSD = OrderStatisticsProducer(TradableProduct.ETHUSD, MarketCode.KRAKEN)
 
     var tradeProducerETHBTC = MarketTradeProducer(TradableProduct.ETHBTC, MarketCode.KRAKEN)
     var statsProducerETHBTC = TradeStatisticsProducer(TradableProduct.ETHBTC, MarketCode.KRAKEN)
+    var orderStatsProducerETHBTC = OrderStatisticsProducer(TradableProduct.ETHBTC, MarketCode.KRAKEN)
 
     @PostConstruct
     fun init() {
         producerConsumerDispatcher.register(statsProducerBTCUSD, tradeProducerBTCUSD)
         producerConsumerDispatcher.register(persistentConsumer, statsProducerBTCUSD)
+        producerConsumerDispatcher.register(persistentConsumer, orderStatsProducerBTCUSD)
 
         producerConsumerDispatcher.register(statsProducerETHUSD, tradeProducerETHUSD)
         producerConsumerDispatcher.register(persistentConsumer, statsProducerETHUSD)
+        producerConsumerDispatcher.register(persistentConsumer, orderStatsProducerETHUSD)
 
         producerConsumerDispatcher.register(statsProducerETHBTC, tradeProducerETHBTC)
         producerConsumerDispatcher.register(persistentConsumer, statsProducerETHBTC)
+        producerConsumerDispatcher.register(persistentConsumer, orderStatsProducerETHBTC)
     }
 
 
     @Scheduled(fixedRate = 5000)
     fun fetchTradesBTCUSD() {
         try {
-            tradeProducerBTCUSD.fetchTrades()
+            tradeProducerBTCUSD.produceData()
         } catch (t: Throwable) {
             logger.error("Failed to execute the scheduled job!", t)
         }
@@ -55,7 +61,7 @@ class TradeWorker() {
     @Scheduled(fixedRate = 5000)
     fun fetchTradesETHUSD() {
         try {
-            tradeProducerETHUSD.fetchTrades()
+            tradeProducerETHUSD.produceData()
         } catch (t: Throwable) {
             logger.error("Failed to execute the scheduled job!", t)
         }
@@ -64,7 +70,33 @@ class TradeWorker() {
     @Scheduled(fixedRate = 5000)
     fun fetchTradesETHBTC() {
         try {
-            tradeProducerETHBTC.fetchTrades()
+            tradeProducerETHBTC.produceData()
+        } catch (t: Throwable) {
+            logger.error("Failed to execute the scheduled job!", t)
+        }
+    }
+    @Scheduled(fixedRate = 5000)
+    fun fetchOrdersBTCUSD() {
+        try {
+            orderStatsProducerBTCUSD.produceData()
+        } catch (t: Throwable) {
+            logger.error("Failed to execute the scheduled job!", t)
+        }
+    }
+
+    @Scheduled(fixedRate = 5000)
+    fun fetchOrdersETHUSD() {
+        try {
+            orderStatsProducerETHUSD.produceData()
+        } catch (t: Throwable) {
+            logger.error("Failed to execute the scheduled job!", t)
+        }
+    }
+
+    @Scheduled(fixedRate = 5000)
+    fun fetchOrdersETHBTC() {
+        try {
+            orderStatsProducerETHBTC.produceData()
         } catch (t: Throwable) {
             logger.error("Failed to execute the scheduled job!", t)
         }

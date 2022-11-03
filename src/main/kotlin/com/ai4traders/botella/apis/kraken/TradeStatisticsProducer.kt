@@ -102,6 +102,7 @@ class TradeStatisticsProducer(
         with (tradeStatistics) {
             val millis = maxStamp.toEpochMilliseconds() - minStamp.toEpochMilliseconds()
             dataStamp = maxStamp
+            creationStamp = Clock.System.now()
             if (!amount.isZero()) {
                 avgPrice = volume / amount
             }

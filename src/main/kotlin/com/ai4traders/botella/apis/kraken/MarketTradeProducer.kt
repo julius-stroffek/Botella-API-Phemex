@@ -4,7 +4,7 @@ import com.ai4traders.botella.ExecutionConfiguration
 import com.ai4traders.botella.data.entities.MarketTrade
 import com.ai4traders.botella.data.entities.TradableProduct
 import com.ai4traders.botella.data.entities.TradeStatistics
-import com.ai4traders.botella.data.producers.DataProducer
+import com.ai4traders.botella.data.producers.ActiveDataProducer
 import com.ai4traders.botella.data.types.MarketCode
 import com.ai4traders.botella.data.types.Numeric
 import com.ai4traders.botella.data.types.toEpochNanoseconds
@@ -18,7 +18,7 @@ import javax.json.JsonArray
 class MarketTradeProducer(
     private val product: TradableProduct,
     private val marketCode: MarketCode
-): DataProducer<MarketTrade>() {
+): ActiveDataProducer<MarketTrade>() {
 
     /** The Kraken ticker symbol for the product. */
     private val ticker = KrakenRestApi.tickerMap[product]!!
@@ -26,7 +26,7 @@ class MarketTradeProducer(
     /** The since where to start fetch of the trade history.  */
     var since: String? = null
 
-    fun fetchTrades() {
+    override fun produceData() {
         if (since == null) {
             val maxStampQuery = ExecutionConfiguration.Companion.INSTANCE.database
                 .from(TradeStatistics)

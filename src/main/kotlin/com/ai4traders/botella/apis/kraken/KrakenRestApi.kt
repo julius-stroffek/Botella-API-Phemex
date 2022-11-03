@@ -19,8 +19,8 @@ object KrakenRestApi {
     const val KRAKEN_DEFAULT_START_NANOS = "0" //"1667246422000000000"
     const val CONNECTION_TIMEOUT = 5000
     const val READ_TIMEOUT = 5000
-    const val ORDER_BOOK_DEPTH = 1000
-    const val ORDER_BOOK_DEPTH_SPREAD = 0.001
+    const val ORDER_BOOK_DEPTH = 500
+    val ORDER_BOOK_DEPTH_SPREADS = listOf(0.001, 0.002, 0.005, 0.010)
     val DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ")
     val tickerMap = mapOf(
         TradableProduct.BTCUSD to "XXBTZUSD",
@@ -63,7 +63,7 @@ object KrakenRestApi {
     }
 
     @Throws(URISyntaxException::class, IOException::class)
-    fun fetchOrderBookData(ticker: String, count: Int?): JsonObject {
+    fun fetchOrderBookData(ticker: String, count: Int = ORDER_BOOK_DEPTH): JsonObject {
         val uriBuilder = createURIBuilder(ticker, KRAKEN_PATH_ORDER_BOOK, count)
         return fetchKrakenData(ticker, uriBuilder)
     }
