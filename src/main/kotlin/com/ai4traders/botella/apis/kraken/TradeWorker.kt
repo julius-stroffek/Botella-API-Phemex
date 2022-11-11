@@ -1,6 +1,7 @@
 package com.ai4traders.botella.apis.kraken
 
 import com.ai4traders.botella.data.ProducerConsumerDispatcher
+import com.ai4traders.botella.data.calculation.TradeStatisticsProducer
 import com.ai4traders.botella.data.consumers.PersistenceConsumer
 import com.ai4traders.botella.data.entities.TradableProduct
 import com.ai4traders.botella.data.types.MarketCode
@@ -75,6 +76,7 @@ class TradeWorker() {
             logger.error("Failed to execute the scheduled job!", t)
         }
     }
+
     @Scheduled(fixedRate = 5000)
     fun fetchOrdersBTCUSD() {
         try {
