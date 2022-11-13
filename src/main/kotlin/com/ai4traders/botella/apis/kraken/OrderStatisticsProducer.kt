@@ -51,15 +51,17 @@ class OrderStatisticsProducer(
     }
 
     fun calculateStatistics(asks: JsonArray, bids: JsonArray, depthSpread: Numeric) {
-        orderStatisticCalculator = OrderStatisticCalculator(marketCode, product, dataStamp, depthSpread)
-        for (i in asks.indices) {
-            val ask = asks.getJsonArray(i)
+        orderStatisticCalculator = OrderStatisticCalculator(marketCode, product, depthSpread, dataStamp)
+        val sortedAsks = asks.toList().sortedBy { Numeric((it as JsonArray).getString(0)) }
+        for (i in sortedAsks.indices) {
+            val ask = sortedAsks[i].asJsonArray()
             orderStatisticCalculator.processOrder(
                 OrderSideCode.SELL, Numeric(ask.getString(0)), Numeric(ask.getString(1)),
                 Instant.fromEpochMilliseconds(ask.getJsonNumber(2).bigDecimalValue().multiply(BigDecimal(1000)).toLong()))
         }
-        for (i in bids.indices) {
-            val bid = bids.getJsonArray(i)
+        val sortedBids = bids.toList().sortedBy { -Numeric((it as JsonArray).getString(0)) }
+        for (i in sortedBids.indices) {
+            val bid = sortedBids[i].asJsonArray()
             orderStatisticCalculator.processOrder(
                 OrderSideCode.BUY, Numeric(bid.getString(0)), Numeric(bid.getString(1)),
                 Instant.fromEpochMilliseconds(bid.getJsonNumber(2).bigDecimalValue().multiply(BigDecimal(1000)).toLong()))
