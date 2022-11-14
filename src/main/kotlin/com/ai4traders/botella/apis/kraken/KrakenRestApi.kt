@@ -26,6 +26,7 @@ object KrakenRestApi {
         TradableProduct.BTCUSD to "XXBTZUSD",
         TradableProduct.ETHBTC to "XETHXXBT",
         TradableProduct.ETHUSD to "XETHZUSD",
+        TradableProduct.XRPUSD to "XXRPZUSD",
     )
 
     fun createURIBuilder(ticker: String, path: String?, count: Int?): URIBuilder {
