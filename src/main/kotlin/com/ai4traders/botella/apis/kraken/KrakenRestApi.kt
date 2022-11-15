@@ -21,12 +21,26 @@ object KrakenRestApi {
     const val READ_TIMEOUT = 5000
     const val ORDER_BOOK_DEPTH = 500
     val ORDER_BOOK_DEPTH_SPREADS = listOf(0.001, 0.002, 0.005, 0.010)
-    val DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ")
     val tickerMap = mapOf(
         TradableProduct.BTCUSD to "XXBTZUSD",
         TradableProduct.ETHBTC to "XETHXXBT",
         TradableProduct.ETHUSD to "XETHZUSD",
         TradableProduct.XRPUSD to "XXRPZUSD",
+        TradableProduct.XRPBTC to "XXRPXXBT",
+        TradableProduct.LTCUSD to "XLTCZUSD",
+        TradableProduct.LTCBTC to "XLTCXXBT",
+        TradableProduct.XMRUSD to "XXMRZUSD",
+        TradableProduct.XMRBTC to "XXMRXXBT",
+        TradableProduct.BCHUSD to "BCHUSD",
+        TradableProduct.BCHBTC to "BCHXBT",
+        TradableProduct.DOGEUSD to "XDGUSD",
+        TradableProduct.DOGEBTC to "XDGXBT",
+        TradableProduct.XLMUSD to "XXLMZUSD",
+        TradableProduct.XLMBTC to "XXLMXXBT",
+        TradableProduct.QNTUSD to "QNTUSD",
+        //TradableProduct.QNTBTC to "QNTBTC",
+        TradableProduct.XNOUSD to "NANOUSD",
+        TradableProduct.XNOBTC to "NANOXBT",
     )
 
     fun createURIBuilder(ticker: String, path: String?, count: Int?): URIBuilder {
