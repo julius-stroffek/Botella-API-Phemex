@@ -1,9 +1,8 @@
 
-Related documentation for Kraken API
+Related documentation for Phemex API
 ===
 
-* https://www.kraken.com/
-* https://docs.kraken.com/rest/
-* https://docs.kraken.com/websockets/
-* https://api.kraken.com/0/public/AssetPairs
-*  https://api.kraken.com/0/public/Ticker?pair=xdgusd 
+* https://phemex.com/
+* https://phemex.com/user-guides/api-overview
+* https://github.com/phemex/phemex-api-docs
+* https://github.com/phemex/phemex-api-docs/blob/master/Public-Spot-API-en.md

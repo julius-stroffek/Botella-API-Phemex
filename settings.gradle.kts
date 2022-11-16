@@ -1,4 +1,4 @@
-rootProject.name = "Botella-API-Kraken"
+rootProject.name = "Botella-API-Phemex"
 
 pluginManagement {
     val kotlinVersion: String by settings

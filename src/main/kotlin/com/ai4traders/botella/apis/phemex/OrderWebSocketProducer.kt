@@ -1,15 +1,11 @@
-package com.ai4traders.botella.apis.kraken
+package com.ai4traders.botella.apis.phemex
 
-import com.ai4traders.botella.data.consumers.Signal
 import com.ai4traders.botella.data.entities.MarketOrder
-import com.ai4traders.botella.data.entities.MarketTrade
 import com.ai4traders.botella.data.entities.TradableProduct
 import com.ai4traders.botella.data.producers.ActiveDataProducer
 import com.ai4traders.botella.data.types.MarketCode
 import com.ai4traders.botella.data.types.Numeric
 import com.ai4traders.botella.data.types.OrderSideCode
-import com.ai4traders.botella.data.types.OrderTypeCode
-import com.ai4traders.botella.exceptions.DataInconsistent
 import com.ai4traders.botella.utils.HttpUtils
 import io.ktor.client.plugins.websocket.*
 import io.ktor.websocket.*
@@ -27,34 +23,9 @@ class OrderWebSocketProducer(
     /** The kotlin logger. */
     private val logger = KotlinLogging.logger {}
 
-    val ticker = KrakenWebSocketApi.tickerMap[product]
+    val ticker = PhemexWebSocketApi.tickerMap[product]
 
     var ready = false
-    /*
-    [
-      0,
-      [
-        [
-          "5541.20000",
-          "0.15850568",
-          "1534614057.321597",
-          "s",
-          "l",
-          ""
-        ],
-        [
-          "6060.00000",
-          "0.02455000",
-          "1534614057.324998",
-          "b",
-          "l",
-          ""
-        ]
-      ],
-      "trade",
-      "XBT/USD"
-    ]
-    */
 
     override fun produceData() {
         val client = HttpUtils.createWebsocketClient()
@@ -62,24 +33,25 @@ class OrderWebSocketProducer(
             try {
                 runBlocking {
                     client.webSocket(
-                        urlString = "${KrakenWebSocketApi.WEBSOCKET_URL}"
+                        urlString = "${PhemexWebSocketApi.WEBSOCKET_URL}"
                     ) {
                         val subscription =
                             """{
-                              "event": "subscribe",
-                              "pair": [
-                                "${ticker}"
-                              ],
-                              "subscription": {
-                                "name": "book",
-                                "depth": 1000
-                              }
+                              "id": 1,
+                              "method": "orderbook.subscribe",
+                              "params": [
+                                "sBTCUSDT",
+                                true
+                              ]
                             }""".replace(" ", "")
-                        logger.info("Sending Kraken subscription: ${subscription}")
+                        logger.info("Sending Phemex subscription: ${subscription}")
                         send(subscription)
+                        val response = (incoming.receive() as Frame.Text).readText()
+                        logger.info("Received response: ${response}")
                         while (true) {
                             val frame = incoming.receive()
                             val json = (frame as Frame.Text).readText()
+                            println(json)
                             val jsonStructure = JSONTokener(json).nextValue();
                             when (jsonStructure) {
                                 is JSONObject -> {
@@ -88,14 +60,14 @@ class OrderWebSocketProducer(
                                     }
                                 }
                                 is JSONArray -> {
-                                    val orders = buildOrders(jsonStructure)
-                                    for (trade in orders) {
-                                        notifyConsumers(trade)
-                                    }
-                                    if (!ready) {
-                                        ready = true
-                                        signal(Signal.READY)
-                                    }
+                                    //val orders = buildOrders(jsonStructure)
+                                    //for (order in orders) {
+                                    //    notifyConsumers(order)
+                                    //}
+                                    //if (!ready) {
+                                    //    ready = true
+                                    //    signal(Signal.READY)
+                                    //}
                                 }
                             }
                         }
