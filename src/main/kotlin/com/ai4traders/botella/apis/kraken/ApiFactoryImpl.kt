@@ -18,11 +18,11 @@ class ApiFactoryImpl(
     }
 
     override fun createOrderWebSocketProducer(product: TradableProduct): ActiveDataProducer<MarketOrder> {
-        TODO("Not yet implemented")
+        return OrderWebSocketProducer(product, marketCode)
     }
 
     override fun createTradeRestProducer(product: TradableProduct): ActiveDataProducer<MarketTrade> {
-        return MarketTradeProducer(product, marketCode)
+        return MarketTradeRestProducer(product, marketCode)
     }
 
     override fun createTradeStatsRestProducer(product: TradableProduct): ActiveDataProducer<TradeStatistic> {
@@ -34,6 +34,6 @@ class ApiFactoryImpl(
     }
 
     override fun createTradeWebSocketProducer(product: TradableProduct): ActiveDataProducer<MarketTrade> {
-        TODO("Not yet implemented")
+        return MarketTradeWebSocketProducer(product, marketCode)
     }
 }

@@ -15,7 +15,7 @@ import org.ktorm.entity.Entity
 import java.math.BigDecimal
 import javax.json.JsonArray
 
-class MarketTradeProducer(
+class MarketTradeRestProducer(
     private val product: TradableProduct,
     private val marketCode: MarketCode
 ): ActiveDataProducer<MarketTrade>() {

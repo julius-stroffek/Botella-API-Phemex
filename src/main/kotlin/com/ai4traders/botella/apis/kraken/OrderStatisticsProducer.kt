@@ -32,24 +32,14 @@ class OrderStatisticsProducer(
 
     override fun produceData() {
         var result = KrakenRestApi.fetchOrderBookData(ticker)
-        if (result == null) {
-            try {
-                Thread.sleep(2000)
-            } catch (e: InterruptedException) {
-                return
-            }
-            result = KrakenRestApi.fetchOrderBookData(ticker)
-        }
-        if (result != null) {
-            dataStamp = Clock.System.now()
-            val contentArray = result.getJsonObject(ticker)
-            val asksArray: JsonArray = contentArray.getJsonArray("asks")
-            val bidsArray: JsonArray = contentArray.getJsonArray("bids")
-            val sortedAsks = asksArray.toList().sortedBy { Numeric((it as JsonArray).getString(0)) }
-            val sortedBids = bidsArray.toList().sortedBy { -Numeric((it as JsonArray).getString(0)) }
-            for (spread in KrakenRestApi.ORDER_BOOK_DEPTH_SPREADS) {
-                calculateStatistics(sortedAsks, sortedBids, Numeric(spread))
-            }
+        dataStamp = Clock.System.now()
+        val contentArray = result.getJsonObject(ticker)
+        val asksArray: JsonArray = contentArray.getJsonArray("asks")
+        val bidsArray: JsonArray = contentArray.getJsonArray("bids")
+        val sortedAsks = asksArray.toList().sortedBy { Numeric((it as JsonArray).getString(0)) }
+        val sortedBids = bidsArray.toList().sortedBy { -Numeric((it as JsonArray).getString(0)) }
+        for (spread in KrakenRestApi.ORDER_BOOK_DEPTH_SPREADS) {
+            calculateStatistics(sortedAsks, sortedBids, Numeric(spread))
         }
     }
 
