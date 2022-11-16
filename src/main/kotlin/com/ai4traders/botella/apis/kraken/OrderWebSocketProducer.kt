@@ -119,6 +119,8 @@ class OrderWebSocketProducer(
             for (it in bids) {
                 val bid = it as JSONArray
                 val order = Entity.create<MarketOrder>()
+                order.product = product
+                order.marketCode = marketCode
                 order.tradeSide = OrderSideCode.BUY
                 order.price = Numeric(bid[0].toString())
                 order.amount = Numeric(bid[1].toString())
@@ -131,6 +133,8 @@ class OrderWebSocketProducer(
             for (it in asks) {
                 val ask = it as JSONArray
                 val order = Entity.create<MarketOrder>()
+                order.product = product
+                order.marketCode = marketCode
                 order.tradeSide = OrderSideCode.SELL
                 order.price = Numeric(ask[0].toString())
                 order.amount = Numeric(ask[1].toString())
