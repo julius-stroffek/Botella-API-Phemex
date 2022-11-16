@@ -113,8 +113,20 @@ class OrderWebSocketProducer(
 
     private fun buildOrders(json: JSONArray): List<MarketOrder> {
         val result = mutableListOf<MarketOrder>()
-        val bids = (if ((json[1] as JSONObject).has("bs")) (json[1] as JSONObject)["bs"] else null) as JSONArray?
-        val asks = (if ((json[1] as JSONObject).has("as")) (json[1] as JSONObject)["as"] else null) as JSONArray?
+        var bids = (
+            if ((json[1] as JSONObject).has("b"))
+                (json[1] as JSONObject)["b"]
+            else if ((json[1] as JSONObject).has("bs"))
+                (json[1] as JSONObject)["bs"]
+            else null
+        ) as JSONArray?
+        var asks = (
+            if ((json[1] as JSONObject).has("a"))
+                (json[1] as JSONObject)["a"]
+            else if ((json[1] as JSONObject).has("as"))
+                (json[1] as JSONObject)["as"]
+            else null
+        ) as JSONArray?
         if (bids != null) {
             for (it in bids) {
                 val bid = it as JSONArray
