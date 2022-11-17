@@ -51,21 +51,17 @@ class MarketTradeWebSocketProducer(
                             val frame = incoming.receive()
                             val json = (frame as Frame.Text).readText()
                             val jsonStructure = JSONTokener(json).nextValue();
-                            /*
                             when (jsonStructure) {
                                 is JSONObject -> {
-                                    if (jsonStructure["event"] != "heartbeat") {
-                                        println("Received response: '${json}'")
-                                    }
-                                }
-                                is JSONArray -> {
                                     val trades = buildTrades(jsonStructure)
                                     for (trade in trades) {
                                         notifyConsumers(trade)
                                     }
                                 }
+                                is JSONArray -> {
+                                    println("Received response: '${json}'")
+                                }
                             }
-                            */
                         }
                     }
                 }
@@ -79,32 +75,24 @@ class MarketTradeWebSocketProducer(
     }
 
 
-    private fun buildTrades(json: JSONArray): List<MarketTrade> {
+    private fun buildTrades(json: JSONObject): List<MarketTrade> {
         val result = mutableListOf<MarketTrade>()
-        val jsonTrades = json[1]
-        if (jsonTrades is JSONArray) {
-            for (it in jsonTrades) {
-                val trd = it as JSONArray
-                val trade = Entity.create<MarketTrade>()
-                trade.marketCode = marketCode
-                trade.product = product
-                trade.price = Numeric(trd[0].toString())
-                trade.amount = Numeric(trd[1].toString())
-                trade.dataStamp = Instant.fromEpochMilliseconds(Numeric(trd[2].toString()).times(1000).doubleValue().toLong())
-                trade.tradeSide = when (trd[3]) {
-                    "b" -> {OrderSideCode.BUY}
-                    "s" -> {OrderSideCode.SELL}
-                    else -> throw DataInconsistent("Wrong value '${trd[3]}' for tradeSide!")
-                }
-                trade.orderType = when (trd[4]) {
-                    "l" -> {OrderTypeCode.LIMIT}
-                    "m" -> {OrderTypeCode.MARKET}
-                    else -> throw DataInconsistent("Wrong value '${trd[4]}' for tradeType!")
-                }
-                result.add(trade)
+        val jsonTrades = json.getJSONArray("trades")
+        for (it in jsonTrades) {
+            val trd = it as JSONArray
+            val trade = Entity.create<MarketTrade>()
+            trade.marketCode = marketCode
+            trade.product = product
+            trade.price = Numeric(trd[2].toString()) / Numeric(100_000_000)
+            trade.amount = Numeric(trd[3].toString()) / Numeric(100_000_000)
+            trade.dataStamp = Instant.fromEpochMilliseconds(Numeric(trd[0].toString()).div(1_000_000).doubleValue().toLong())
+            trade.tradeSide = when (trd[1].toString().lowercase()) {
+                "buy" -> {OrderSideCode.BUY}
+                "sell" -> {OrderSideCode.SELL}
+                else -> throw DataInconsistent("Wrong value '${trd[3]}' for tradeSide!")
             }
-        } else {
-            throw DataInconsistent("Unexpected json format for trades: ${json}")
+            trade.orderType = OrderTypeCode.LIMIT
+            result.add(trade)
         }
         return result
     }

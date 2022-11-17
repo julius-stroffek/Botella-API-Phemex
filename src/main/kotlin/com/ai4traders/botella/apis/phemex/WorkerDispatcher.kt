@@ -21,8 +21,8 @@ class WorkerDispatcher() {
     fun init() {
         marketWorkerDispatcher.createWorkers(
             product = TradableProduct.BTCUSD, //PhemexWebSocketApi.tickerMap.keys,
-            tradeApi = ApiType.WEB_SOCKETS,
-            orderBookApi = ApiType.NONE,
+            tradeApi = ApiType.NONE,
+            orderBookApi = ApiType.WEB_SOCKETS,
             refreshInterval = 5.seconds,
             ApiFactoryImpl()
         )

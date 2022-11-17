@@ -1,5 +1,6 @@
 package com.ai4traders.botella.apis.phemex
 
+import com.ai4traders.botella.data.consumers.Signal
 import com.ai4traders.botella.data.entities.MarketOrder
 import com.ai4traders.botella.data.entities.TradableProduct
 import com.ai4traders.botella.data.producers.ActiveDataProducer
@@ -13,6 +14,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
 import mu.KotlinLogging
 import org.json.*
+import org.ktorm.dsl.div
 import org.ktorm.entity.Entity
 import java.net.ProtocolException
 
@@ -51,23 +53,20 @@ class OrderWebSocketProducer(
                         while (true) {
                             val frame = incoming.receive()
                             val json = (frame as Frame.Text).readText()
-                            println(json)
                             val jsonStructure = JSONTokener(json).nextValue();
                             when (jsonStructure) {
                                 is JSONObject -> {
-                                    if (jsonStructure["event"] != "heartbeat") {
-                                        println("Received response: '${json}'")
+                                    val orders = buildOrders(jsonStructure)
+                                    for (order in orders) {
+                                        notifyConsumers(order)
+                                    }
+                                    if (!ready) {
+                                        ready = true
+                                        signal(Signal.READY)
                                     }
                                 }
                                 is JSONArray -> {
-                                    //val orders = buildOrders(jsonStructure)
-                                    //for (order in orders) {
-                                    //    notifyConsumers(order)
-                                    //}
-                                    //if (!ready) {
-                                    //    ready = true
-                                    //    signal(Signal.READY)
-                                    //}
+                                    println("Received response: '${json}'")
                                 }
                             }
                         }
@@ -83,20 +82,18 @@ class OrderWebSocketProducer(
     }
 
 
-    private fun buildOrders(json: JSONArray): List<MarketOrder> {
+    private fun buildOrders(json: JSONObject): List<MarketOrder> {
         val result = mutableListOf<MarketOrder>()
+        val timestamp = Instant.fromEpochMilliseconds(json.getNumber("timestamp").toLong().div(1_000_000))
+        val book = json.getJSONObject("book") as JSONObject
         var bids = (
-            if ((json[1] as JSONObject).has("b"))
-                (json[1] as JSONObject)["b"]
-            else if ((json[1] as JSONObject).has("bs"))
-                (json[1] as JSONObject)["bs"]
+            if (book.has("bids"))
+                book["bids"]
             else null
         ) as JSONArray?
         var asks = (
-            if ((json[1] as JSONObject).has("a"))
-                (json[1] as JSONObject)["a"]
-            else if ((json[1] as JSONObject).has("as"))
-                (json[1] as JSONObject)["as"]
+            if (book.has("asks"))
+                book["asks"]
             else null
         ) as JSONArray?
         if (bids != null) {
@@ -106,9 +103,9 @@ class OrderWebSocketProducer(
                 order.product = product
                 order.marketCode = marketCode
                 order.tradeSide = OrderSideCode.BUY
-                order.price = Numeric(bid[0].toString())
-                order.amount = Numeric(bid[1].toString())
-                order.dataStamp = Instant.fromEpochMilliseconds(Numeric(bid[2].toString()).times(1000).doubleValue().toLong())
+                order.price = Numeric(bid[0].toString()) / Numeric(100_000_000)
+                order.amount = Numeric(bid[1].toString()) / Numeric(100_000_000)
+                order.dataStamp = timestamp
                 result.add(order)
             }
         }
@@ -120,9 +117,9 @@ class OrderWebSocketProducer(
                 order.product = product
                 order.marketCode = marketCode
                 order.tradeSide = OrderSideCode.SELL
-                order.price = Numeric(ask[0].toString())
-                order.amount = Numeric(ask[1].toString())
-                order.dataStamp = Instant.fromEpochMilliseconds(Numeric(ask[2].toString()).times(1000).doubleValue().toLong())
+                order.price = Numeric(ask[0].toString()) / Numeric(100_000_000)
+                order.amount = Numeric(ask[1].toString()) / Numeric(100_000_000)
+                order.dataStamp = timestamp
                 result.add(order)
             }
         }
