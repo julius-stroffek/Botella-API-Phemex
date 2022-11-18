@@ -9,6 +9,7 @@ import com.ai4traders.botella.data.types.OrderSideCode
 import com.ai4traders.botella.data.types.OrderTypeCode
 import com.ai4traders.botella.exceptions.DataInconsistent
 import com.ai4traders.botella.utils.HttpUtils
+import com.ai4traders.botella.utils.WebSocketClientWrapper
 import io.ktor.client.plugins.websocket.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.runBlocking
@@ -19,43 +20,49 @@ import org.ktorm.entity.Entity
 import java.net.ProtocolException
 
 class MarketTradeWebSocketProducer(
-    private val product: TradableProduct,
+    private val products: Collection<TradableProduct>,
     private val marketCode: MarketCode
 ) : ActiveDataProducer<MarketTrade>() {
     /** The kotlin logger. */
     private val logger = KotlinLogging.logger {}
 
-    val ticker = PhemexWebSocketApi.tickerMap[product]
+    val tickers = products.map { PhemexWebSocketApi.tickerMap[it] }
+    val productMap = PhemexWebSocketApi.tickerMap.entries.map {it.value to it.key}.toMap()
 
     override fun produceData() {
-        val client = HttpUtils.createWebsocketClient()
         while (true) {
+            val clientWrapper = WebSocketClientWrapper()
             try {
                 runBlocking {
-                    client.webSocket(
+                    clientWrapper.client.webSocket(
                         urlString = "${PhemexWebSocketApi.WEBSOCKET_URL}"
                     ) {
-                        val subscription =
-                            """{
-                          "id": 1,
-                          "method": "trade.subscribe",
-                          "params": [
-                            "${ticker}"
-                          ]
-                        }""".replace(" ", "")
-                        logger.info("Sending Phemex subscription: ${subscription}")
-                        send(subscription)
-                        val response = (incoming.receive() as Frame.Text).readText()
-                        logger.info("Received response: ${response}")
+                        for (ticker in tickers) {
+                            val subscription =
+                                """{
+                              "id": 1,
+                              "method": "trade.subscribe",
+                              "params": [
+                                "${ticker}"
+                              ]
+                            }""".replace(" ", "")
+                            logger.info("Sending Phemex subscription: ${subscription}")
+                            send(subscription)
+                        }
                         while (true) {
                             val frame = incoming.receive()
+                            clientWrapper.activity()
                             val json = (frame as Frame.Text).readText()
                             val jsonStructure = JSONTokener(json).nextValue();
                             when (jsonStructure) {
                                 is JSONObject -> {
-                                    val trades = buildTrades(jsonStructure)
-                                    for (trade in trades) {
-                                        notifyConsumers(trade)
+                                    if (jsonStructure.has("result")) {
+                                        logger.info("Received response: ${json}")
+                                    } else {
+                                        val trades = buildTrades(jsonStructure)
+                                        for (trade in trades) {
+                                            notifyConsumers(trade)
+                                        }
                                     }
                                 }
                                 is JSONArray -> {
@@ -66,38 +73,45 @@ class MarketTradeWebSocketProducer(
                     }
                 }
             } catch (e: ProtocolException) {
-                logger.error("Failed to process the websocket data for market '${marketCode}' and product '${product}'!", e)
+                logger.error("Failed to process the websocket data for market '${marketCode}' and products '${products.joinToString(", ")}'!", e)
             } catch (e: Exception) {
-                logger.error("Failed to process the websocket data for market '${marketCode}' and product '${product}'!", e)
+                logger.error("Failed to process the websocket data for market '${marketCode}' and products '${products.joinToString(", ")}'!", e)
             }
         }
-        client.close()
     }
 
 
     private fun buildTrades(json: JSONObject): List<MarketTrade> {
         val result = mutableListOf<MarketTrade>()
         val jsonTrades = json.getJSONArray("trades")
-        for (it in jsonTrades) {
-            val trd = it as JSONArray
-            val trade = Entity.create<MarketTrade>()
-            trade.marketCode = marketCode
-            trade.product = product
-            trade.price = Numeric(trd[2].toString()) / Numeric(100_000_000)
-            trade.amount = Numeric(trd[3].toString()) / Numeric(100_000_000)
-            trade.dataStamp = Instant.fromEpochMilliseconds(Numeric(trd[0].toString()).div(1_000_000).doubleValue().toLong())
-            trade.tradeSide = when (trd[1].toString().lowercase()) {
-                "buy" -> {OrderSideCode.BUY}
-                "sell" -> {OrderSideCode.SELL}
-                else -> throw DataInconsistent("Wrong value '${trd[3]}' for tradeSide!")
+        val product = productMap[json.getString("symbol")]
+        if (product != null) {
+            for (it in jsonTrades) {
+                val trd = it as JSONArray
+                val trade = Entity.create<MarketTrade>()
+                trade.marketCode = marketCode
+                trade.product = product
+                trade.price = Numeric(trd[2].toString()) / Numeric(100_000_000)
+                trade.amount = Numeric(trd[3].toString()) / Numeric(100_000_000)
+                trade.dataStamp =
+                    Instant.fromEpochMilliseconds(Numeric(trd[0].toString()).div(1_000_000).doubleValue().toLong())
+                trade.tradeSide = when (trd[1].toString().lowercase()) {
+                    "buy" -> {
+                        OrderSideCode.BUY
+                    }
+                    "sell" -> {
+                        OrderSideCode.SELL
+                    }
+                    else -> throw DataInconsistent("Wrong value '${trd[3]}' for tradeSide!")
+                }
+                trade.orderType = OrderTypeCode.LIMIT
+                result.add(trade)
             }
-            trade.orderType = OrderTypeCode.LIMIT
-            result.add(trade)
         }
         return result
     }
 
     override fun uniquePathId(): String {
-        return "${this::class.qualifiedName}/${marketCode}/${product}"
+        return "${this::class.qualifiedName}/${marketCode}/${products.joinToString("|")}"
     }
 }

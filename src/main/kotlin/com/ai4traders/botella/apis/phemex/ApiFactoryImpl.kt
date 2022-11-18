@@ -18,7 +18,7 @@ class ApiFactoryImpl(
     }
 
     override fun createOrderWebSocketProducer(product: TradableProduct): ActiveDataProducer<MarketOrder> {
-        return OrderWebSocketProducer(product, marketCode)
+        return OrderWebSocketProducer(listOf(product), marketCode)
     }
 
     override fun createTradeRestProducer(product: TradableProduct): ActiveDataProducer<MarketTrade> {
@@ -34,6 +34,6 @@ class ApiFactoryImpl(
     }
 
     override fun createTradeWebSocketProducer(product: TradableProduct): ActiveDataProducer<MarketTrade> {
-        return MarketTradeWebSocketProducer(product, marketCode)
+        return MarketTradeWebSocketProducer(listOf(product), marketCode)
     }
 }
