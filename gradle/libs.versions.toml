@@ -1,5 +1,5 @@
 [versions]
-botella="0.1-DEVEL"
+botella="0.1-SNAPSHOT"
 kotlinxCoroutines="1.6.4"
 
 [libraries]

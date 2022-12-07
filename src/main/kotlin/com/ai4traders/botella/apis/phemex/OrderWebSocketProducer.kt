@@ -27,14 +27,18 @@ class OrderWebSocketProducer(
     /** The kotlin logger. */
     private val logger = KotlinLogging.logger {}
 
+    lateinit var clientWrapper: WebSocketClientWrapper
+
     val tickers = products.map { PhemexWebSocketApi.tickerMap[it] }
+
     val productMap = PhemexWebSocketApi.tickerMap.entries.map {it.value to it.key}.toMap()
 
     var ready = false
 
     override fun produceData() {
         while (true) {
-            val clientWrapper = WebSocketClientWrapper()
+            clientWrapper = WebSocketClientWrapper()
+            clientWrapper.createClient()
             try {
                 runBlocking {
                     clientWrapper.client.webSocket(
@@ -132,6 +136,16 @@ class OrderWebSocketProducer(
             }
         }
         return result
+    }
+
+    override fun handleSignal(signal: Signal) {
+        super.handleSignal(signal)
+        when (signal.type) {
+            Signal.SignalType.RESET -> {
+                clientWrapper.cancel("Cancelling web socket client for products '${products.joinToString(", ")}' on market '${marketCode}'.")
+            }
+            else -> {}
+        }
     }
 
     override fun uniquePathId(): String {

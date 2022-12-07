@@ -20,7 +20,7 @@ plugins {
 }
 
 group = "com.ai4traders"
-version = "0.1-DEVEL"
+version = "0.1-SNAPSHOT"
 
 repositories {
     mavenLocal()
@@ -65,8 +65,7 @@ sourceSets {
 
 publishing {
     publications {
-        create<MavenPublication>("Botella") {
-            artifactId = "Botella"
+        create<MavenPublication>("maven") {
             from(components["java"])
             versionMapping {
                 usage("java-api") {
@@ -79,6 +78,7 @@ publishing {
         }
     }
 }
+
 
 tasks.test {
     useJUnitPlatform()

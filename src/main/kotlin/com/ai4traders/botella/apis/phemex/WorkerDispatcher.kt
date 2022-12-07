@@ -1,8 +1,6 @@
 package com.ai4traders.botella.apis.phemex
 
-import com.ai4traders.botella.apis.ApiType
-import com.ai4traders.botella.apis.MarketWorkerDispatcher
-import com.ai4traders.botella.apis.ProductConfiguration
+import com.ai4traders.botella.apis.*
 import com.ai4traders.botella.data.entities.TradableProduct
 import com.ai4traders.botella.data.types.MarketCode
 import mu.KotlinLogging
@@ -24,12 +22,14 @@ class WorkerDispatcher() {
     fun init() {
         val products = ProductConfiguration.configureProducts(
             products = PhemexWebSocketApi.tickerMap.keys,
+            marketCode = MarketCode.PHEMEX,
             tradeApi = ApiType.WEB_SOCKETS,
             orderBookApi = ApiType.WEB_SOCKETS,
             refreshInterval = 5.seconds,
+            flags = ProductConfigurationFlags.of(ProductConfigurationFlag.VALIDATE_ORDER_BOOK_PRICE_GAP)
         )
         val factory = ApiFactoryImpl()
-        //marketWorkerDispatcher.createTradeWorkers(products, MarketTradeWebSocketProducer(PhemexWebSocketApi.tickerMap.keys, marketCode), factory)
+        marketWorkerDispatcher.createTradeWorkers(products, MarketTradeWebSocketProducer(PhemexWebSocketApi.tickerMap.keys, marketCode), factory)
         marketWorkerDispatcher.createOrderWorkers(products, OrderWebSocketProducer(PhemexWebSocketApi.tickerMap.keys, marketCode), factory)
     }
 }

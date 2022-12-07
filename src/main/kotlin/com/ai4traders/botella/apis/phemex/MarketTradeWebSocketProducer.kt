@@ -26,12 +26,14 @@ class MarketTradeWebSocketProducer(
     /** The kotlin logger. */
     private val logger = KotlinLogging.logger {}
 
+    val clientWrapper = WebSocketClientWrapper()
+
     val tickers = products.map { PhemexWebSocketApi.tickerMap[it] }
     val productMap = PhemexWebSocketApi.tickerMap.entries.map {it.value to it.key}.toMap()
 
     override fun produceData() {
         while (true) {
-            val clientWrapper = WebSocketClientWrapper()
+            clientWrapper.createClient()
             try {
                 runBlocking {
                     clientWrapper.client.webSocket(
@@ -108,6 +110,7 @@ class MarketTradeWebSocketProducer(
                 result.add(trade)
             }
         }
+        result.sortBy { it.dataStamp }
         return result
     }
 
