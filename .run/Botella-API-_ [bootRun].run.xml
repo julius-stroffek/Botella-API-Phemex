@@ -13,7 +13,7 @@
           <option value="bootRun" />
         </list>
       </option>
-      <option name="vmOptions" value="-Dserver.port=0 -Dspring-profiles-active=uat" />
+      <option name="vmOptions" value="-Dserver.port=0 -Dspring-profiles-active=local" />
     </ExternalSystemSettings>
     <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
     <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
