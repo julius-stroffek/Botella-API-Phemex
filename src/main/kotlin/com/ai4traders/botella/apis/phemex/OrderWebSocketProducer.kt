@@ -27,7 +27,7 @@ import kotlin.time.Duration.Companion.seconds
 class OrderWebSocketProducer(
     private val products: Collection<TradableProduct>,
     private val marketCode: MarketCode
-) : ActiveDataProducer<MarketOrder>() {
+) : ActiveDataProducer<List<MarketOrder>>() {
     /** The kotlin logger. */
     private val logger = KotlinLogging.logger {}
 
@@ -40,7 +40,7 @@ class OrderWebSocketProducer(
     var ready = false
     var requestId: Long = 0
 
-    lateinit var lastPong: Instant
+    var lastPong: Instant = Clock.System.now()
     val pongLimit = 60.seconds
 
     override fun produceData() {
@@ -96,9 +96,7 @@ class OrderWebSocketProducer(
                                         }
                                     } else {
                                         val orders = buildOrders(jsonStructure)
-                                        for (order in orders) {
-                                            notifyConsumers(order)
-                                        }
+                                        notifyConsumers(orders)
                                         if (!ready) {
                                             ready = true
                                             signal(

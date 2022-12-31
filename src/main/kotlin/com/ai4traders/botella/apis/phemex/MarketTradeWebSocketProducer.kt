@@ -30,7 +30,7 @@ import kotlin.time.Duration.Companion.seconds
 class MarketTradeWebSocketProducer(
     private val products: Collection<TradableProduct>,
     private val marketCode: MarketCode
-) : ActiveDataProducer<MarketTrade>() {
+) : ActiveDataProducer<List<MarketTrade>>() {
     /** The kotlin logger. */
     private val logger = KotlinLogging.logger {}
 
@@ -41,7 +41,7 @@ class MarketTradeWebSocketProducer(
     val pingTimer = DurationTimer(10.seconds)
     var requestId: Long = 0
 
-    lateinit var lastPong: Instant
+    var lastPong: Instant = Clock.System.now()
     val pongLimit = 60.seconds
 
     override fun produceData() {
@@ -91,9 +91,7 @@ class MarketTradeWebSocketProducer(
                                         }
                                     } else {
                                         val trades = buildTrades(jsonStructure)
-                                        for (trade in trades) {
-                                            notifyConsumers(trade)
-                                        }
+                                        notifyConsumers(trades)
                                     }
                                 }
                                 is JSONArray -> {
