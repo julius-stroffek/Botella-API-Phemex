@@ -26,7 +26,7 @@ class WorkerDispatcher() {
             tradeApi = ApiType.WEB_SOCKETS,
             orderBookApi = ApiType.WEB_SOCKETS,
             refreshInterval = 5.seconds,
-            //flags = ProductConfigurationFlags.of(ProductConfigurationFlag.VALIDATE_ORDER_BOOK_PRICE_GAP)
+            flags = ProductConfigurationFlags.of(ProductConfigurationFlag.VALIDATE_ORDER_BOOK_PRICE_GAP)
         )
         val factory = ApiFactoryImpl()
         marketWorkerDispatcher.createTradeWorkers(products, MarketTradeWebSocketProducer(PhemexWebSocketApi.tickerMap.keys, marketCode), factory)
